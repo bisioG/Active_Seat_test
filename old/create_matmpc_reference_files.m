@@ -18,7 +18,8 @@ path_main_matmpc = 'C:\Users\giulio\Desktop\UNIVERSITA\TESI\active seat\MATMPC';
 
 %% ****** test name setting
 
-test_name = 'test_file_v5_lat';
+test_name = 'test_file_v6_lat';
+type = 1; % 1= lateral 2=longitudinal pressure model
 
 %% ***** load data cueing
 mainfolder = pwd;
@@ -30,8 +31,8 @@ load(load_ws)
 
 % acc data
 
-ax = resample(AS_data(:,1),4,5)'; %simulation acc on x
-ay = resample(AS_data(:,2),4,5)'; %simulation acc on y
+ax = (resample(AS_data(:,1),4,5)')./ 9.81; %simulation acc on x scaled by g
+ay = (resample(AS_data(:,2),4,5)')./9.81; %simulation acc on y scaled by g
 
 Ts = 1/200; %sampling time
 Tf = 25; %simulation fixed time
@@ -55,8 +56,10 @@ if N_sim*Ts > Tf
     
 end
 
-%% ***** create the pressure reference
+%% ***** create the pressure reference (LATERAL)
 
+if type == 1
+    
 % ODE nonLin
 
 % parametri modello pressorio gli stessi con cui creo il modello mpc
@@ -109,17 +112,60 @@ ode_function = @(t,y) odefun_lin_hpfilter(t,y,tspan,ay,m,k2,c2,tau_hp,A);
 %calcolo le uscite al modello pressorio LINEARE
 [F_pres_Lin,damping_Lin,ay_corpo_Lin,pos_Lin,vel_Lin,Output_L,ypf_L,yp_L] = make_ref_Lin_HP(Ts,Tf,ay,m,k2,c2,tau_hp,A,y); 
 
+end
+
+if type == 2
+
+% ODE Lin (longitudinal)
+
+% parametri modello pressorio gli stessi con cui creo il modello mpc
+
+current_path =pwd;
+cd (path_examples);
+run Pressure_model_params_Lin
+cd(current_path);
+
+tspan = tt;
+y0 = [0;0;0]; % cond iniziali
+
+ode_function = @(t,y) odefun_lin_hpfilter_Long(t,y,tspan,ax,m,k2,c2,tau_hp,A);
+[t,y] = ode45(ode_function, tspan, y0); %  (funzione da integrare, intervallo di integrazione, cond iniziali)
+
+
+%calcolo le uscite al modello pressorio LINEARE
+[F_pres_Lin,damping_Lin,ax_corpo_Lin,pos_Lin,vel_Lin,Output_L,ypf_L_long,yp_L_long] = make_ref_Lin_HP_Long(Ts,Tf,ax,m,k2,c2,tau_hp,A,y); 
+
+end
+    
 
 %****************** GRAFICI
 
-%% plots delle componenti del segnale pressorio NON filtrato (studio del segnale pressorio)
- param_name = 'test AS';
+param_name = 'AS'; %plot title
+
+if type==1
+    
+% plots delle componenti del segnale pressorio NON filtrato (studio del segnale pressorio)
+ 
  run plot_rif_pres_laterale
 
 %% plots confronto tra segnali filtrati e non filtrati
 
 run plot_rif_pres_laterale_HP
 
+end
+
+if type==2
+    
+% plots delle componenti del segnale pressorio NON filtrato (studio del segnale pressorio)
+ 
+ run plot_rif_pres_long
+
+%% plots confronto tra segnali filtrati e non filtrati
+
+run plot_rif_pres_long_HP
+
+end
+    
 
 %% ************** CREAZIONE DEL FILE DI RIFERIMENTO DI PRESSIONE PER MATMPC
 
@@ -130,6 +176,7 @@ rif_pressione = ypf_NL; % il riferimento scelto (rif_pressione variabile utilizz
 % ypf_NL
 % ypf_NL_WOfriction
 % ypf_L
+% ypf_L_long
 
 cd([pwd,'\data\',test_name,'\rif_pressure_saved']);
 label = test_name;
@@ -137,6 +184,9 @@ save('rif_pressione','rif_pressione','test_name');
 cd('..');
 
 %% *************** CREAZIONE DEI PARAMETRI DI ACCX,ACCY,ROLL DA UTILIZZARE NEL MODELLO MPC
+
+% caso laterale (roll)
+if type == 1
     
 rif_accX = acc_lin(:,1)';
 rif_accY = acc_lin(:,2)';
@@ -161,6 +211,37 @@ if N_sim*Ts > Tf
 end
 
     save([pwd,'\rif_params_saved\rif_params'],'rif_accX','rif_accY','rif_roll');
+    
+end
+
+%caso longitudinale (pitch)
+if type ==2
+
+rif_accX = acc_lin(:,1)';
+rif_accY = acc_lin(:,2)';
+rif_pitch = pos_ang(:,2)';
+    
+% to have 25s of simulation
+
+if N_sim*Ts < Tf
+    
+    N_zeros = (Tf/Ts)-N_sim;
+    rif_accX = [rif_accX,zeros(1,N_zeros)];
+    rif_accY = [rif_accY,zeros(1,N_zeros)];
+    rif_pitch = [rif_pitch,zeros(1,N_zeros)];
+    
+end
+if N_sim*Ts > Tf
+    
+    N_end = Tf/Ts;
+    rif_accX = rif_accX(1,1:N_end);
+    rif_accY = rif_accY(1,1:N_end);
+    rif_pitch = rif_pitch(1,1:N_end);
+end
+
+    save([pwd,'\rif_params_saved\rif_params'],'rif_accX','rif_accY','rif_pitch');
+    
+end
     
 %% *************** COPIARE IN MATMPC/DATA RIFERIMENTO DI PRESSIONE CREATO E PARAMETRI
 

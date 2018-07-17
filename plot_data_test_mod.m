@@ -106,10 +106,10 @@ plot(tt,AS_data(:,1),'b','Linewidth',1);
 hold on;
 plot(tt,AS_data(:,2),'r','Linewidth',1);
 plot(tt,AS_data(:,3),'g','Linewidth',1);
-lgd = legend('AS1','AS2','AS3');
+lgd = legend('AS1(acc x)','AS2(acc y)','AS3(acc z)');
 lgd.FontSize= legend_size;
-xlabel('time [s]'); ylabel('[m]');
-title('Active Seat input','FontSize',title_size)
+xlabel('time [s]'); ylabel('[(m/s)^2]');
+title('Active Seat input from test.csv','FontSize',title_size)
 
 %% ***** AS_input_0_data_real
 
@@ -123,10 +123,10 @@ plot(tt2,SIM_acc_lin_small(:,2),'b','Linewidth',1);
 hold on;
 plot(tt2,-SIM_acc_lin_small(:,1),'r','Linewidth',1);
 plot(tt2,SIM_acc_lin_small(:,3),'g','Linewidth',1);
-lgd = legend('AS1','AS2','AS3');
+lgd = legend('AS1(acc x)','AS2(acc y)','AS3(acc z)');
 lgd.FontSize= legend_size;
-xlabel('time [s]'); ylabel('[m]');
-title('Active Seat input','FontSize',title_size)
+xlabel('time [s]'); ylabel('[(m/s)^2]');
+title('Active Seat input from 0.data.csv','FontSize',title_size)
 
 
 %% ***** linear accelerations compare two files
