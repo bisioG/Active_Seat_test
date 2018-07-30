@@ -17,12 +17,28 @@ path_main_matmpc = 'C:\Users\giulio\Desktop\UNIVERSITA\TESI\active seat\MATMPC';
 
 save_local = 'C:\Users\giulio\Desktop\UNIVERSITA\TESI\active seat\Active_Seat_test'; 
 
-%% ****** test name setting and type
+%% ****** TEST FILE NAME SETTINGS AND TYPE
 
-test_name = 'test_file_v4_lat';
+test_name = 'test_file_v6_lat';
 type = 1; % 1= lateral 2=longitudinal pressure model
 
 param_name = 'AS'; %plot title name
+
+%% ************** SET THE REFERENCE TYPE
+
+rif_type = 'Non linear lateral HP';
+
+% TYPE:
+
+% Non linear lateral
+% Non linear lateral HP
+% Linear lateral
+% Linear lateral HP
+% Non linear lateral WOfriction
+% Non linear lateral WOfriction HP
+% Linear longitudinal
+% Linear longitudinal HP
+
 
 %% ***** load data cueing
 mainfolder = pwd;
@@ -62,24 +78,6 @@ end
 %% create the references
 
 run create_matmpc_reference_files.m
-
-%% settings the reference 
-
-rif_pressione = ypf_NL; % il riferimento scelto (rif_pressione, variabile utilizzata in matmpc)
-
-% tipi:
-% 
-% HP FILTERED
-% ypf_NL
-% ypf_NL_WOfriction
-% ypf_L
-% ypf_L_long
-
-% yp_NL
-% yp_NL_WOfriction
-% yp_L
-% yp_L_long
-
-
+run set_ref_type.m
 run save_and_move_ref.m
 
