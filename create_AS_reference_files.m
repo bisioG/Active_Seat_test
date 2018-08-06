@@ -19,14 +19,14 @@ save_local = 'C:\Users\giulio\Desktop\UNIVERSITA\TESI\active seat\Active_Seat_te
 
 %% ****** TEST FILE NAME SETTINGS AND TYPE
 
-test_name = 'test_file_v6_lat';
-type = 1; % 1= lateral 2=longitudinal pressure model
+sim_type = 'test_file_v4_lat';
+type = 2; % 1= lateral 2=longitudinal pressure model
 
 param_name = 'AS'; %plot title name
 
 %% ************** SET THE REFERENCE TYPE
 
-rif_type = 'Non linear lateral HP';
+rif_type = 'Linear longitudinal HP';
 
 % TYPE:
 
@@ -42,8 +42,8 @@ rif_type = 'Non linear lateral HP';
 
 %% ***** load data cueing
 mainfolder = pwd;
-cd([mainfolder,'\data\', test_name]);
-load_ws = [test_name,'_cueing.mat'];
+cd([mainfolder,'\data\', sim_type]);
+load_ws = [sim_type,'_cueing.mat'];
 %load_ws2= [test_name,'_input_simulation.mat'];
 load(load_ws)
 %load(load_ws2)
@@ -79,5 +79,6 @@ end
 
 run create_matmpc_reference_files.m
 run set_ref_type.m
+run plot_all.m
 run save_and_move_ref.m
 

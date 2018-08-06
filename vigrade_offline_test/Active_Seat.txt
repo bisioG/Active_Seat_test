@@ -1,0 +1,132 @@
+// Active seat C++ code conversion
+/*##########################################################################
+    _      ___   _____   ___  __   __  ___     ___   ___     _     _____ 
+   /_\    / __| |_   _| |_ _| \ \ / / | __|   / __| | __|   /_\   |_   _|
+  / _ \  | (__    | |    | |   \ V /  | _|    \__ \ | _|   / _ \    | |  
+ /_/ \_\  \___|   |_|   |___|   \_/   |___|   |___/ |___| /_/ \_\   |_|  
+  
+############################################################################  
+*/
+//##########################################################################
+//#################_____Active seat C++ code conversion_______##############
+//##########################################################################
+double saturation(double valore, double min, double max)
+{
+	if (valore >= max)
+		return max; 
+   if (valore<=min)
+		return min;
+	else
+		return valore;
+}
+
+double segno(double valore)
+{
+	if (valore >=0.0)
+		return 1.0;
+	else
+		return -1.0;
+}
+
+void activeseat(double Dt)
+{
+  // Abilitazione sedile (per pressione complessiva a zero (no pre-loads)
+  //double seat_enable=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_ENABLE );
+  // Frequenze di taglio per filtri passa basso	
+  double long_acc_filter_freq=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_FILTERS_LONG_LP ); //Frequenza di taglio di prova per accelerazione longitudinale  [Hz]
+  double lat_acc_filter_freq=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_FILTERS_LAT_LP );  //Frequenza di taglio di prova per accelerazione laterale       [Hz]
+  double vert_acc_filter_freq=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_FILTERS_VERT_LP ); //Frequenza di taglio di prova per accelerazione verticale      [Hz]
+  // Precarichi
+  double vert_preload=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_INF_PRELOAD );
+  double lat_inf_preload=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_LOWER_LAT_PRELOAD );
+  double lat_sup_preload=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_UPPER_LAT_PRELOAD );
+  double rear_preload=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_REAR_PRELOAD );
+  // Guadagni
+  double global_gain=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_GLOBAL_GAIN );
+  double gain_vert=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_INF_GAIN );
+  double gain_lat_inf=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_LOWER_LAT_GAIN );
+  double gain_lat_sup=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_UPPER_LAT_GAIN );
+  double gain_rear=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_REAR_GAIN );
+  // Guadagni NL
+  double NL_gain_vert=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_INF_NL_GAIN );
+  double NL_gain_lat_inf=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_LOWER_LAT_NL_GAIN );
+  double NL_gain_lat_sup=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_UPPER_LAT_NL_GAIN );
+  double NL_gain_rear=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_REAR_NL_GAIN );
+  // Guadagni di asimmetria
+  double gain_asimmetry_rear=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_REAR_ASIMMETRY_GAIN );
+  double gain_asimmetry_vert=signals_io->getHardwareOutSignalVal( OUTPUT_HW_SEAT_INF_ASIMMETRY_GAIN );
+  // Valori di pressione massima
+  double max_pressure=1.5;
+  double min_pressure=0.0;
+  double valve_gain=5.0; // Valore legato alla conversione Volt/Bar -> 10.0 V / 2.0 BAR = 5
+
+// Parametri filtro ricalcolati ogni qualvolta la simulazione è in pausa
+  if (signals_io->getHardwareOutSignalVal( OUTPUT_HW_VICRT_SOLVER_STATUS ) == VICRT_SOLVER_STATUS_PAUSED) 
+{
+			vmth::filterutils::FilterCoefficients fc1 = vmth::filterutils::calcButterworth( vmth::filterutils::LOWPASS_FILTER, 2, long_acc_filter_freq, Dt );
+		    long_acc_filter.init(fc1.b,fc1.a,0.0);
+			vmth::filterutils::FilterCoefficients fc2 = vmth::filterutils::calcButterworth( vmth::filterutils::LOWPASS_FILTER, 2, lat_acc_filter_freq, Dt );
+		    lat_acc_filter.init(fc2.b,fc2.a,0.0);
+			vmth::filterutils::FilterCoefficients fc3 = vmth::filterutils::calcButterworth( vmth::filterutils::LOWPASS_FILTER, 2, vert_acc_filter_freq, Dt );
+		    vert_acc_filter.init(fc3.b,fc3.a,0.0);
+}
+
+// Valori da simulazione filtrati e limitati
+  double long_acc = saturation(long_acc_filter.compute(signals_io->getSimulationOutSignalVal(OUTPUT_FV_chassis_accelerations_longitudinal)),-5.0,5.0);
+  double lat_acc  = saturation(lat_acc_filter.compute(signals_io->getSimulationOutSignalVal(OUTPUT_FV_chassis_accelerations_lateral)),-5.0,5.0); 
+  double vert_acc = saturation(vert_acc_filter.compute(signals_io->getSimulationOutSignalVal(OUTPUT_FV_chassis_accelerations_vertical)),-5.0,5.0);
+
+// Calcolo pressioni 
+//p_out_lat_inf_sx = offset_lat_inf + gain*sign(ay)*abs(ay)^NLGain*gain_lat_inf; Da Simulink
+double p_lat_inf_sx=lat_inf_preload+global_gain*segno(lat_acc)*pow(fabs(lat_acc),NL_gain_lat_inf)*gain_lat_inf; // Cuscino 1
+
+//signals_io->setHardwareOutSignalVal( OUTPUT_HW_PHIDGET_DIG1,lat_acc);
+//signals_io->setHardwareOutSignalVal( OUTPUT_HW_PHIDGET_DIG2,p_lat_inf_sx);
+
+//p_out_lat_inf_dx = offset_lat_inf - gain*sign(ay)*abs(ay)^NLGain*gain_lat_inf; Da Simulink
+double p_lat_inf_dx=lat_inf_preload-global_gain*segno(lat_acc)*pow(fabs(lat_acc),NL_gain_lat_inf)*gain_lat_inf; // Cuscino 6
+
+//p_out_lat_sup_sx = offset_lat_sup + gain*sign(ay)*abs(ay)^NLGain*gain_lat_sup; Da Simulink
+double p_lat_sup_sx=lat_sup_preload+global_gain*segno(lat_acc)*pow(fabs(lat_acc),NL_gain_lat_sup)*gain_lat_sup; // Cuscino 2
+
+//p_out_lat_sup_dx = offset_lat_sup - gain*sign(ay)*abs(ay)^NLGain*gain_lat_sup; Da Simulink
+double p_lat_sup_dx=lat_sup_preload-global_gain*segno(lat_acc)*pow(fabs(lat_acc),NL_gain_lat_sup)*gain_lat_sup; // Cuscino 5
+
+//b = offset_post + sign(ax)*abs(ax)^NLGain_long*gain*gain_post; Da Simulink   
+double br=rear_preload+segno(long_acc)*pow(fabs(long_acc),NL_gain_rear)*global_gain*gain_rear; // Costante per asimmetria posteriore
+
+//p_out_post_sx = b+b*Gain_Asimmetry_Rear*2/pi*atan(ay/abs(ax)); Da Simulink
+double p_rear_sx=br+br*gain_asimmetry_rear*(2.0/pi)*atan(lat_acc/fabs(long_acc)); // Cuscino 3
+p_rear_sx=vmth_isnan(p_rear_sx)?0.0:p_rear_sx;
+
+//p_out_post_dx = b-b*Gain_Asimmetry_Rear*2/pi*atan(ay/abs(ax)); Da Simulink
+double p_rear_dx=br-br*gain_asimmetry_rear*(2.0/pi)*atan(lat_acc/fabs(long_acc)); // Cuscino 4
+p_rear_dx=vmth_isnan(p_rear_dx)?0.0:p_rear_dx;
+
+//b = offset_inf + sign(az)*abs(az)^NLGain_inf*gain*gain_inf; Da Simulink
+double bv=vert_preload+segno(vert_acc)*pow(fabs(vert_acc),NL_gain_vert)*global_gain*gain_vert; // Costante per asimmetria verticale
+
+//p_out_inf_sx = b + b*Gain_Asimmetry_Inf*2/pi*atan(ay/abs(az)); Da Simulink
+double p_inf_sx=bv+bv*gain_asimmetry_vert*(2.0/pi)*atan(lat_acc/fabs(vert_acc)); // Cuscino 7
+p_inf_sx=vmth_isnan(p_inf_sx)?0.0:p_inf_sx;
+
+//p_out_inf_dx = b - b*Gain_Asimmetry_Inf*2/pi*atan(ay/abs(az)); Da Simulink
+double p_inf_dx=bv-bv*gain_asimmetry_vert*(2.0/pi)*atan(lat_acc/fabs(vert_acc)); // Cuscino 8
+p_inf_dx=vmth_isnan(p_inf_dx)?0.0:p_inf_dx;
+
+//printf("gain_asimmetry= %f\n",gain_asimmetry_vert);
+//Scrittura pressioni su Beckhoff previa saturazione
+
+      signals_io->setHardwareOutSignalVal( OUTPUT_HW_ECAT_BECKH_ANA1,valve_gain*saturation(p_lat_inf_sx,min_pressure,max_pressure));
+      signals_io->setHardwareOutSignalVal( OUTPUT_HW_ECAT_BECKH_ANA2,valve_gain*saturation(p_lat_sup_sx,min_pressure,max_pressure));
+      signals_io->setHardwareOutSignalVal( OUTPUT_HW_ECAT_BECKH_ANA3,valve_gain*saturation(p_rear_sx,min_pressure,max_pressure));
+      signals_io->setHardwareOutSignalVal( OUTPUT_HW_ECAT_BECKH_ANA4,valve_gain*saturation(p_rear_dx,min_pressure,max_pressure));
+      signals_io->setHardwareOutSignalVal( OUTPUT_HW_ECAT_BECKH_ANA5,valve_gain*saturation(p_lat_sup_dx,min_pressure,max_pressure));
+      signals_io->setHardwareOutSignalVal( OUTPUT_HW_ECAT_BECKH_ANA6,valve_gain*saturation(p_lat_inf_dx,min_pressure,max_pressure));
+      signals_io->setHardwareOutSignalVal( OUTPUT_HW_ECAT_BECKH_ANA7,valve_gain*saturation(p_inf_sx,min_pressure,max_pressure));
+      signals_io->setHardwareOutSignalVal( OUTPUT_HW_ECAT_BECKH_ANA8,valve_gain*saturation(p_inf_dx,min_pressure,max_pressure));
+ 
+}
+//##########______________________________________________________########
+//##############    End of active seat C++ code conversion    ############
+//########################################################################
