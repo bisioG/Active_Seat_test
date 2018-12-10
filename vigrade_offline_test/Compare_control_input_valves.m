@@ -1,4 +1,4 @@
-% script to compare input VALVES signal control USING real and simulated (MPC) INPUTS
+% script to compare input VALVES signal control USING state of art and MPC INPUTS
 
 clear all;
 clc;
@@ -57,56 +57,67 @@ end
 
 % valve 1
 
-figure;        
+figure;
 plot(time,real_valve_1,'b','Linewidth',1);
 hold on; grid on;
+ylim([0 1.5]);
 plot(time,sim_valve_1,'r','Linewidth',1);
-lgd = legend('Real input valve','Simulation (MPC) input valve');
+lgd = legend('VI-Grade input valve','MPC input valve');
 lgd.FontSize= legend_size;
-xlabel('time [s]'); ylabel('[Atm]');
-title(['Compare [valve 1: bottom left] input control, Simulation: ',sim_type],'FontSize',title_size,'Interpreter', 'none')
+xlabel('time [s]'); ylabel('[Bar]');
+title(['Compare [valve 1: lateral bottom left] input control, Simulation: ',sim_type],'FontSize',title_size,'Interpreter', 'none')
 
-figure;        
-plot(time,real_valve_2,'b','Linewidth',1);
+%% valve 2
+figure;
+plot(time,real_valve_2,'b','Linewidth',2);
 hold on; grid on;
-plot(time,sim_valve_2,'r','Linewidth',1);
-lgd = legend('Real input valve','Simulation (MPC) input valve');
+%ylim([0 1.5]);
+plot(time,sim_valve_2,'r','Linewidth',2);
+lgd = legend('VI-Grade input valve','UniPD-MPC input valve');
 lgd.FontSize= legend_size;
-xlabel('time [s]'); ylabel('[Atm]');
-title(['Compare [valve 2:top left] input control, Simulation: ',sim_type],'FontSize',title_size,'Interpreter', 'none')
+xlabel('time [s]'); ylabel('[Bar]');
+%title(['Compare [valve 2: lateral top left] input control, Simulation: ',sim_type],'FontSize',title_size,'Interpreter', 'none')
 
-figure;        
+%% valve 3
+figure;
 plot(time,real_valve_3,'b','Linewidth',1);
 hold on; grid on;
+ylim([0 1.5]);
 plot(time,sim_valve_3,'r','Linewidth',1);
-lgd = legend('Real input valve','Simulation (MPC) input valve');
+lgd = legend('VI-Grade input valve','MPC input valve');
 lgd.FontSize= legend_size;
-xlabel('time [s]'); ylabel('[Atm]');
-title(['Compare [valve 3:rear left] input control, Simulation: ',sim_type],'FontSize',title_size,'Interpreter', 'none')
+xlabel('time [s]'); ylabel('[Bar]');
+title(['Compare [valve 3: rear left] input control, Simulation: ',sim_type],'FontSize',title_size,'Interpreter', 'none')
 
-figure;        
+%% valve 4
+figure;
 plot(time,real_valve_4,'b','Linewidth',1);
 hold on; grid on;
+ylim([0 1.5]);
 plot(time,sim_valve_4,'r','Linewidth',1);
-lgd = legend('Real input valve','Simulation (MPC) input valve');
+lgd = legend('VI-Grade input valve','MPC input valve');
 lgd.FontSize= legend_size;
-xlabel('time [s]'); ylabel('[Atm]');
+xlabel('time [s]'); ylabel('[Bar]');
 title(['Compare [valve 4: rear right] input control, Simulation: ',sim_type],'FontSize',title_size,'Interpreter', 'none')
 
-figure;        
-plot(time,real_valve_5,'b','Linewidth',1);
+%% valve 5
+figure;
+plot(time,real_valve_5,'b','Linewidth',2);
 hold on; grid on;
-plot(time,sim_valve_5,'r','Linewidth',1);
-lgd = legend('Real input valve','Simulation (MPC) input valve');
+ylim([0 1.5]);
+plot(time,sim_valve_5,'r','Linewidth',2);
+lgd = legend('VI-Grade input valve','UniPD-MPC input valve');
 lgd.FontSize= legend_size;
-xlabel('time [s]'); ylabel('[Atm]');
-title(['Compare [valve 5: top right] input control, Simulation: ',sim_type],'FontSize',title_size,'Interpreter', 'none')
+xlabel('time [s]'); ylabel('[Bar]');
+%title(['Compare [valve 5: lateral top right] input control, Simulation: ',sim_type],'FontSize',title_size,'Interpreter', 'none')
 
-figure;        
+%% valve 6
+figure;
 plot(time,real_valve_6,'b','Linewidth',1);
 hold on; grid on;
+ylim([0 1.5]);
 plot(time,sim_valve_6,'r','Linewidth',1);
-lgd = legend('Real input valve','Simulation (MPC) input valve');
+lgd = legend('VI-Grade input valve','MPC input valve');
 lgd.FontSize= legend_size;
 xlabel('time [s]'); ylabel('[Atm]');
-title(['Compare [valve 6: bottom right] input control, Simulation: ',sim_type],'FontSize',title_size,'Interpreter', 'none')
+title(['Compare [valve 6: lateral bottom right] input control, Simulation: ',sim_type],'FontSize',title_size,'Interpreter', 'none')

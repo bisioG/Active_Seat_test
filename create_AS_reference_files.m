@@ -1,7 +1,7 @@
 %% file to creat rif_pressione.mat and rif_params.mat to be used in MATMPC
 
 clear all;
-close all;
+% close all;
 clc;
 
 %% ***** SETTING PATHS
@@ -19,14 +19,16 @@ save_local = 'C:\Users\giulio\Desktop\UNIVERSITA\TESI\active seat\Active_Seat_te
 
 %% ****** TEST FILE NAME SETTINGS AND TYPE
 
-sim_type = 'test_file_v4_lat';
-type = 2; % 1= lateral 2=longitudinal pressure model
+sim_type = 'test_file_v6_lat'%'test_file_v5_lat';
+type = 1; % 1= lateral 2=longitudinal pressure model
+
+platform_action=0; % 0= no platform action, 1= with platform action
 
 param_name = 'AS'; %plot title name
 
 %% ************** SET THE REFERENCE TYPE
 
-rif_type = 'Linear longitudinal HP';
+rif_type = 'Non linear lateral HP';
 
 % TYPE:
 
@@ -50,11 +52,17 @@ load(load_ws)
 
 % acc data
 
-ax = (resample(AS_data(:,1),4,5)'); %simulation acc on x 
-ay = (resample(AS_data(:,2),4,5)'); %simulation acc on y 
+%dowsample at 200 Hz (campionato a 1000 hz)
+ax_nf = (resample(AS_data(:,1),4,5)'); %simulation acc on x 
+ay_nf= (resample(AS_data(:,2),4,5)'); %simulation acc on y 
 
 Ts = 1/200; %sampling time
-Tf = 25; %simulation fixed time
+
+% filtraggio a 30 hz (pulire il segnale)
+ax= filter([0 1-exp(-Ts/0.03)],[1 -exp(-Ts/0.03)],ax_nf);
+ay= filter([0 1-exp(-Ts/0.03)],[1 -exp(-Ts/0.03)],ay_nf);
+
+Tf = 65 %25; %simulation fixed time
 N_sim = length(ax); %sample
 tt=Ts:Ts:Tf; %time (25s fixed simulation)
 
@@ -81,4 +89,5 @@ run create_matmpc_reference_files.m
 run set_ref_type.m
 run plot_all.m
 run save_and_move_ref.m
+
 

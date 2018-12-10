@@ -9,7 +9,16 @@ function [ pos_lin pos_ang vel_lin vel_ang acc_lin acc_ang AS_data full_data] = 
 mainfolder = pwd;
 cd([mainfolder,'\data\', test_name]);
 %import_data = bsxfun(@times,dlmread([file_name,'.csv'],',',0,0),R);
+
+if strcmp(file_name,'test_chicane')
+    
+import_data = dlmread([file_name,'.csv'],';',0,0);
+
+sdata = resreader('Acc_DLC_Dec.csv');
+
+else
 import_data = dlmread([file_name,'.csv'],',',0,0);
+
 
 
 %% linear position extraction
@@ -37,7 +46,7 @@ AS_data = import_data(:,21:24);
 
 full_data = [ pos_lin pos_ang vel_lin vel_ang acc_lin acc_ang AS_data];
 
-
+end
 %% return to main folder
 
 save([test_name,'_cueing'],'pos_lin','pos_ang','vel_lin','vel_ang','acc_lin','acc_ang','AS_data','full_data')

@@ -1,9 +1,11 @@
-%% plot data of a single test 
+%% plot data of a single test
+
+
 clear all;
 clc;
 % ***** settings
 
-test_name = 'test_file_v4_lat'; %folder and test name
+test_name = 'test_chicane' %'test_file_v1_8_long'; %folder and test name
 
 Ts = 1/250; %sampling time
 
@@ -15,9 +17,9 @@ title_size=19;  %TITLE SIZE SETTINGS
 mainfolder = pwd;
 cd([mainfolder,'\data\', test_name]);
 load_ws = [test_name,'_cueing.mat'];
-load_ws2= [test_name,'_input_simulation.mat'];
+%load_ws2= [test_name,'_input_simulation.mat'];
 load(load_ws)
-load(load_ws2)
+%load(load_ws2)
 
 %% ***** plot data
 N_sim = length(full_data);
@@ -99,7 +101,7 @@ xlabel('time [s]'); ylabel('[(rad/s)^2]');
 title('Angular Accelerations','FontSize',title_size)
 
 
-%% ***** AS_outputs
+%% ***** AS_inputs 
 
 figure;
 plot(tt,AS_data(:,1),'b','Linewidth',1);
